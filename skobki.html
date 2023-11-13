@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Скобки</title>
+    <meta charset="utf-8">
+    <script
+			  src="https://code.jquery.com/jquery-3.7.1.min.js"
+			  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+			  crossorigin="anonymous">
+    </script>
+</head>
+<body>
+    <script>
+    function randnum() {
+        return Math.floor(Math.random()*9+1);
+    }
+    function randsign() {
+        const signs = ["+", "-"];
+        return signs[Math.floor(Math.random()*signs.length)];
+    }
+    class Problem {
+        constructor() {
+            this.a = randnum();
+            this.b = randnum();
+            this.c = randnum();
+            this.s1 = randsign();
+            this.s2 = randsign();
+            this.order = Math.random() < 0.5;
+        }
+        toString() {
+            var t;
+            if (this.ord) {
+                t = "( " + this.a + " " + this.s1 + " " + this.b + " ) " + this.s2 + " " + this.c;
+            } else {
+                t = "" + this.a + " " + this.s1 + " ( " + this.b + " " + this.s2 + " " + this.c + " )";
+            }
+            return t;
+        }
+        solve() {
+            var t;
+            if (this.ord) {
+                if (this.s1 == "+") {
+                    t = this.a + this.b;
+                } else {
+                    t = this.a - this.b;
+                }
+                if (this.s2 == "+") {
+                    t = t + this.c;
+                } else {
+                    t = t - this.c;
+                }
+            } else {
+                if (this.s2 == "+") {
+                    t = this.b + this.c;
+                } else {
+                    t = this.b - this.c;
+                }
+                if (this.s1 == "+") {
+                    t = this.a + t;
+                } else {
+                    t = this.a - t;
+                }
+            }
+            return t;
+        }
+    }
+    function reset() {
+        var prob;
+        while (1) {
+            prob = new Problem();
+            if (prob.solve() >= 0) {
+                break;
+            }
+        }
+        document.prob = prob;
+        $("#problem").text(prob.toString());
+        $("#result").text("");
+        $("#response").val("");
+    }
+    function check() {
+        var correct = document.prob.solve();
+        if (""+$("#response").val() == ""+correct) {
+            $( "#result").text("Правильно!");
+        } else {
+            $( "#result").text("Неправильно. Должно быть " + correct);
+        }
+    }
+    function keypress_button(e) {
+        console.log(e);
+        if (e.key === 'Enter' || e.keyCode === 13) {
+            check();
+        }
+    }
+
+    $( document ).ready( function() {
+        $("#response").on("keyup", function(e) {
+            if (e.key === "Enter" || e.keyCode === 13) {
+                check();
+            }
+        });
+        reset();
+    });
+    </script>
+    <a href="/">Главная</a>
+    <br />
+    <br />
+    Решите пример со скобками.
+    <br />
+    <br />
+    <div>
+        Пример: <div id="problem"></div>
+        <br />
+        Ответ: <input id="response" type="text" value="">
+        <input type="button" value="Отправить" onclick="check()">
+        <br />
+        <br />
+        Результат: <div id="result"></div>
+        <br />
+        <br />
+        <input type="button" value="Заново" onclick="reset()">
+    </div>
+</body>
+</html>
