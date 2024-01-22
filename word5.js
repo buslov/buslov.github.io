@@ -1,12 +1,18 @@
 class Game {
-    constructor(ctx) {
-        this.ctx = ctx;
+    constructor() {
+        this.ctx = document.getElementById("game").getContext("2d");
         this.canvw = 400;
         this.buttons = [];
+        this.color0 = "#000000";
+        this.color1 = "#FFFFFF";
+        this.color2 = "#555555";
+        this.color3 = "#F1DD00";
+        this.color4 = "#900000";
         this.restart();
     }
 
     restart() {
+        $("#footer").text("");
         this.curline = "";
         this.lines = [];
         this.is_game_over = false;
@@ -20,7 +26,6 @@ class Game {
         // Скругленный прямоугольник
         // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
         // https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Drawing_shapes
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in
         const ctx = this.ctx;
         ctx.beginPath();
         ctx.moveTo(x + r, y);
@@ -45,20 +50,20 @@ class Game {
         var fillRect = "";
         var fillText = "";
         if (state == 0) {
-            fillRect = "#555555";
-            fillText = "#FFFFFF";
+            fillRect = this.color2;
+            fillText = this.color1;
         } else if (state == 1) {
-            fillRect = "#FFFFFF";
-            fillText = "#000000";
+            fillRect = this.color1;
+            fillText = this.color0;
         } else if (state == 2) {
-            fillRect = "#E0E050";
-            fillText = "#000000";
+            fillRect = this.color3;
+            fillText = this.color0;
         } else {
             fillRect = 0;
-            fillText = "#FFFFFF";
+            fillText = this.color1;
         }
         if (is_incorrect) {
-            fillText = "#700000"
+            fillText = this.color4;
         }
         this.rounded_rect(x, y, w, h, r, fillRect);
         if (text != "") {
@@ -75,12 +80,13 @@ class Game {
         const letw = Math.floor(this.canvw * 0.16);
         const leth = letw;
         const xoffset = Math.floor(this.canvw * 0.05);
-        const yoffset = xoffset;
-        const padxy = Math.floor(this.canvw * 0.025);
-        const rrad = padxy;
+        const yoffset = 1;
+        const padx = (this.canvw - letw*5 - xoffset*2)/4;
+        const pady = padx*0.8;
+        const rrad = padx;
 
         this.ctx.lineWidth = 2;
-        this.ctx.strokeStyle = "#E0E050";
+        this.ctx.strokeStyle = this.color3;
         for (let j = 0; j < 6; j++) {
             for (let i = 0; i < 5; i++) {
                 var state = -1;
@@ -93,7 +99,7 @@ class Game {
                     text = this.curline[i];
                     is_incorrect = this.is_incorrect_word;
                 }
-                this.draw_cell(xoffset+i*(padxy+letw), yoffset+j*(padxy+leth), letw, leth, rrad, text, state, is_incorrect);
+                this.draw_cell(xoffset+i*(padx+letw), yoffset+j*(pady+leth), letw, leth, rrad, text, state, is_incorrect);
             }
         }
     }
@@ -102,17 +108,17 @@ class Game {
         const fontSize = w * 0.8;
         const state = this.kb_state.get(text);
         if (state == 1) {
-            this.rounded_rect(x, y, w, h, r, "#555555");
-            this.ctx.fillStyle = "#FFFFFF";
+            this.rounded_rect(x, y, w, h, r, this.color2);
+            this.ctx.fillStyle = this.color1;
         } else if (state == 2) {
-            this.rounded_rect(x, y, w, h, r, "#FFFFFF");
-            this.ctx.fillStyle = "#000000";
+            this.rounded_rect(x, y, w, h, r, this.color1);
+            this.ctx.fillStyle = this.color0;
         } else if (state == 3) {
-            this.rounded_rect(x, y, w, h, r, "#F1DD00");
-            this.ctx.fillStyle = "#000000";
+            this.rounded_rect(x, y, w, h, r, this.color3);
+            this.ctx.fillStyle = this.color0;
         } else  {
             this.rounded_rect(x, y, w, h, r);
-            this.ctx.fillStyle = "#FFFFFF";
+            this.ctx.fillStyle = this.color1;
         }
         this.ctx.font = `${fontSize}px sans-serif`;
         this.ctx.textBaseline = "middle";
@@ -125,11 +131,11 @@ class Game {
         let fillStyle = "";
         let strokeStyle = "";
         if (state) {
-            fillStyle = "#F1DD00";
-            strokeStyle = "#000000";
+            fillStyle = this.color3;
+            strokeStyle = this.color0;
         } else {
-            fillStyle = "#555555";
-            strokeStyle = "#FFFFFF";
+            fillStyle = this.color2;
+            strokeStyle = this.color1;
         }
         this.rounded_rect(x, y, w, h, r, fillStyle);
         y += 0.05 * w;
@@ -147,11 +153,11 @@ class Game {
         let fillStyle = "";
         let strokeStyle = "";
         if (state) {
-            fillStyle = "#FFFFFF";
-            strokeStyle = "#000000";
+            fillStyle = this.color1;
+            strokeStyle = this.color0;
         } else {
-            fillStyle = "#555555";
-            strokeStyle = "#FFFFFF";
+            fillStyle = this.color2;
+            strokeStyle = this.color1;
         }
         this.rounded_rect(x, y, w, h, r, fillStyle);
         y += 0.05 * w;
@@ -176,12 +182,12 @@ class Game {
     }
 
     draw_keyboard() {
-        const letw = Math.floor(this.canvw * 0.0675); // 27
-        const leth = Math.floor(this.canvw * 0.1075); // 43
+        const letw = this.canvw * 0.07;
+        const leth = this.canvw * 0.1075;
         const sbutw = letw * 1.5;
         const sbuth = leth;
-        const padxy = Math.floor(letw * 0.2);
-        const rrad = Math.floor(this.canvw * 0.015); // 6
+        const padx = letw * 0.1;
+        const rrad = this.canvw * 0.015;
         let letters = [
             ["Й", "Ц", "У", "К", "Е", "Н", "Г", "Ш", "Щ", "З", "Х", "Ъ"],
             ["Ф", "Ы", "В", "А", "П", "Р", "О", "Л", "Д", "Ж", "Э"],
@@ -189,14 +195,14 @@ class Game {
         ];
 
         this.buttons = [];
-        this.ctx.strokeStyle = "#555555"
+        this.ctx.strokeStyle = this.color2;
         for (let j = 0; j < 3; j++) {
             let letn = letters[j].length;
-            let xoffset = Math.floor((this.canvw - letw * letn - padxy * (letn-1)) / 2);
-            let yoffset = Math.floor(this.canvw * 1.25 + leth * 1.5 * j);
+            let xoffset = (this.canvw - letw * letn - padx * (letn-1)) / 2;
+            let yoffset = this.canvw * 1.10 + leth * 1.5 * j;
             for (let i = 0; i < letn; i++) {
                 this.ctx.lineWidth = 1;
-                let x = xoffset+i*(padxy+letw);
+                let x = xoffset+i*(padx+letw);
                 let y = yoffset;
                 let w = letw;
                 let h = leth;
@@ -208,18 +214,14 @@ class Game {
             }
             if (j == 2) {
                 // Button OK
-                var x = xoffset - sbutw - padxy;
+                var x = xoffset - sbutw - padx;
                 var y = yoffset;
                 var w = sbutw;
                 var h = sbuth;
-                var active = false;
                 this.draw_kb_button_ok(x, y, w, h, rrad, (this.curline.length == 5));
                 this.buttons.push({x1: x, y1: y, x2: x+w, y2: y+h, code: "OK"});
                 // Button Backspace
-                x = xoffset + (letw + padxy) * letn;
-                y = yoffset;
-                w = sbutw;
-                h = sbuth;
+                x = xoffset + (letw + padx) * letn;
                 this.draw_kb_button_back(x, y, w, h, rrad, (this.curline.length != 0));
                 this.buttons.push({x1: x, y1: y, x2: x+w, y2: y+h, code: "BACK"});
             }
@@ -227,11 +229,8 @@ class Game {
     }
 
     refresh() {
-        //console.log("refresh");
         this.ctx.reset();
-        // Игровое поле
         this.draw_game_field();
-        // Клавиатура
         this.draw_keyboard();
     }
 
@@ -242,13 +241,11 @@ class Game {
 
         var x = event.pageX - elemLeft,
             y = event.pageY - elemTop;
-        //console.log("click " + x + "," + y);
         if (this.is_game_over) {
             return;
         }
         for (const btn of this.buttons) {
             if (x >= btn.x1 && x <= btn.x2 && y >= btn.y1 && y <= btn.y2) {
-                //console.log("clicked " + btn.code);
                 if (btn.code == "BACK") {
                     if (this.curline.length != 0) {
                         this.curline = this.curline.slice(0, -1);
@@ -270,7 +267,6 @@ class Game {
     }
 
     check() {
-        // TODO проверить слово
         const word = this.curline;
         if (words.includes(word)) {
             let result = [0, 0, 0, 0, 0];
@@ -307,8 +303,11 @@ class Game {
             }
             this.lines.push({word: word, result: result});
             this.curline = "";
-            if (this.lines.length == 6 || word == this.guessed_word) {
+            if (word == this.guessed_word) {
+                $("#footer").text("Вы угадали слово!");
+            } else if (this.lines.length == 6) {
                 this.is_game_over = true;
+                $("#footer").text("Вы не угадали слово " + this.guessed_word);
             }
         } else {
             this.is_incorrect_word = true;
@@ -319,9 +318,8 @@ class Game {
 function onload() {
     const canvas = document.getElementById("game");
     if (canvas.getContext) {
-        const ctx = canvas.getContext("2d");
-        window.g = new Game(ctx);
-        canvas.addEventListener('click', function(event) {
+        window.g = new Game();
+        canvas.addEventListener("click", function(event) {
             window.g.onclick(event);
         }, false);
     }

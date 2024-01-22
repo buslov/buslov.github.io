@@ -5,44 +5,33 @@
 Игра 5 Букв
 </title>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width">
-<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style type="text/css">
-body {
-    background-color: #101010;
+body, html {
+    background-color: #111;
     margin: 0;
+    //overflow-y: hidden;
+    overflow-x: hidden;
 }
 
 h1 {
     text-align: center;
 }
-
-a {
-    text-decoration: none;
-}
-
-.center {
-    margin-left: auto;
-    margin-right: auto;
-    text-align: center;
-}
-
-canvas {
-    /*
-    border: 1px solid green;
-    */
-}
-
-
 </style>
-    <script src="words.js"></script>
-    <script src="word5.js"></script>
+<script
+		  src="https://code.jquery.com/jquery-3.7.1.min.js"
+		  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+		  crossorigin="anonymous">
+</script>
+<script src="words.js"></script>
+<script src="word5.js"></script>
 </head>
 <body>
-    <h1 style="color:#FFFFFF;">Игра 5 БУКВ</h1>
+    <h1 style="color:#fff;">Игра 5 БУКВ</h1>
     <div align="center">
-        <canvas id="game" width="400" height="700"></canvas>
+        <canvas id="game" width="400" height="620"></canvas>
     </div>
+    <div id="footer" style="color:#fff;text-align:center;"></div>
     <script>
         window.addEventListener("load", onload);
     </script>
