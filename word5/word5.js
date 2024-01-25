@@ -1,5 +1,6 @@
 class Game {
-    constructor() {
+    constructor(words) {
+        this.words = words;
         this.ctx = document.getElementById("game").getContext("2d");
         this.canvw = 400;
         this.buttons = [];
@@ -8,17 +9,34 @@ class Game {
         this.color2 = "#555555";
         this.color3 = "#F1DD00";
         this.color4 = "#900000";
+        this.kbletters = [
+            ["Й", "Ц", "У", "К", "Е", "Н", "Г", "Ш", "Щ", "З", "Х", "Ъ"],
+            ["Ф", "Ы", "В", "А", "П", "Р", "О", "Л", "Д", "Ж", "Э"],
+            ["Я", "Ч", "С", "М", "И", "Т", "Ь", "Б", "Ю"],
+        ];
         this.restart();
     }
 
-    restart() {
+    restart(usequery=true) {
         $("#footer").text("");
         this.curline = "";
         this.lines = [];
         this.is_game_over = false;
         this.is_incorrect_word = false
-        this.guessed_word = words[Math.floor(Math.random() * words.length)];
         this.kb_state = new Map();
+        for (const line of this.kbletters) {
+            for (const ch of line) {
+                this.kb_state.set(ch, 0);
+            }
+        }
+        if (usequery && this.state_from_url()) {
+            console.log("Game loaded from query string");
+        } else {
+            console.log("New Game");
+            this.guessed_word = this.words[Math.floor(Math.random() * this.words.length)];
+            this.randid = Math.floor(Math.random() * 10000);
+            this.change_url(true);
+        }
         this.refresh();
     }
 
@@ -188,11 +206,7 @@ class Game {
         const sbuth = leth;
         const padx = letw * 0.1;
         const rrad = this.canvw * 0.015;
-        let letters = [
-            ["Й", "Ц", "У", "К", "Е", "Н", "Г", "Ш", "Щ", "З", "Х", "Ъ"],
-            ["Ф", "Ы", "В", "А", "П", "Р", "О", "Л", "Д", "Ж", "Э"],
-            ["Я", "Ч", "С", "М", "И", "Т", "Ь", "Б", "Ю"],
-        ];
+        let letters = this.kbletters;
 
         this.buttons = [];
         this.ctx.strokeStyle = this.color2;
@@ -266,51 +280,98 @@ class Game {
         }
     }
 
-    check() {
-        const word = this.curline;
-        if (words.includes(word)) {
-            let result = [0, 0, 0, 0, 0];
-            let used = [0, 0, 0, 0, 0];
-            for (let i = 0; i < 5; i++) {
-                if (word[i] == this.guessed_word[i]) {
-                    result[i] = 2;
-                    used[i] = 1;
-                    this.kb_state.set(word[i], 3);
-                }
+    add_line(word) {
+        let result = [0, 0, 0, 0, 0];
+        let used = [0, 0, 0, 0, 0];
+        for (let i = 0; i < 5; i++) {
+            if (word[i] == this.guessed_word[i]) {
+                result[i] = 2;
+                used[i] = 1;
+                this.kb_state.set(word[i], 3);
             }
-            for (let i = 0; i < 5; i++) {
-                if (result[i]) {
+        }
+        for (let i = 0; i < 5; i++) {
+            if (result[i]) {
+                continue;
+            }
+            for (let j = 0; j < 5; j++) {
+                if (used[j] != 0) {
                     continue;
                 }
-                for (let j = 0; j < 5; j++) {
-                    if (used[j] != 0) {
-                        continue;
-                    }
-                    if (word[i] == this.guessed_word[j]) {
-                        result[i] = 1;
-                        used[j] = 1;
-                    }
+                if (word[i] == this.guessed_word[j]) {
+                    result[i] = 1;
+                    used[j] = 1;
                 }
             }
-            for (let i = 0; i < 5; i++) {
-                if (result[i] == 2) {
-                    this.kb_state.set(word[i], 3);
-                } else if (result[i] == 1 && this.kb_state.get(word[i]) < 2) {
-                    this.kb_state.set(word[i], 2);
-                } else if (result[i] == 0 && this.kb_state.get(word[i]) < 1) {
-                    this.kb_state.set(word[i], 1);
-                }
+        }
+        for (let i = 0; i < 5; i++) {
+            if (result[i] == 2) {
+                this.kb_state.set(word[i], 3);
+            } else if (result[i] == 1 && this.kb_state.get(word[i]) < 2) {
+                this.kb_state.set(word[i], 2);
+            } else if (result[i] == 0 && this.kb_state.get(word[i]) < 1) {
+                this.kb_state.set(word[i], 1);
             }
-            this.lines.push({word: word, result: result});
-            this.curline = "";
-            if (word == this.guessed_word) {
-                $("#footer").text("Вы угадали слово!");
-            } else if (this.lines.length == 6) {
-                this.is_game_over = true;
-                $("#footer").text("Вы не угадали слово " + this.guessed_word);
-            }
+        }
+        this.lines.push({word: word, result: result});
+        this.curline = "";
+        if (word == this.guessed_word) {
+            $("#footer").text("Вы угадали слово!");
+        } else if (this.lines.length == 6) {
+            this.is_game_over = true;
+            $("#footer").text("Вы не угадали слово " + this.guessed_word);
+        }
+    }
+
+    check() {
+        if (this.words.includes(this.curline)) {
+            this.add_line(this.curline);
+            this.change_url();
         } else {
             this.is_incorrect_word = true;
+        }
+    }
+
+    change_url(save_to_history=false) {
+        var qu = $.query.parseNew(window.location.search);
+        var g = [
+            this.words.findIndex((x) => x == this.guessed_word),
+            this.randid];
+        var p = [];
+        for (const y of this.lines) {
+            p.push(this.words.findIndex((x) => x == y.word))
+        }
+        var newUrl = qu.set("g", btoa(JSON.stringify(g)));
+        if (p.length != 0) {
+            newUrl.SET("p", btoa(JSON.stringify(p)));
+        } else {
+            newUrl.REMOVE("p");
+        }
+        if (save_to_history) {
+            window.history.pushState('page2', "Title", newUrl.toString());
+        } else {
+            window.history.replaceState('page2', "Title", newUrl.toString());
+        }
+    }
+
+    state_from_url() {
+        // Загрузить состояние игры из параметров URL
+        var qu = $.query.parseNew(window.location.search);
+        var ga = qu.get("g");
+        if (ga) {
+            var g = JSON.parse(atob(ga));
+            this.guessed_word = this.words[g[0]];
+
+            var pa = qu.get("p");
+            if (pa) {
+                var p = JSON.parse(atob(pa));
+                for (const word_idx of p ) {
+                    this.add_line(this.words[word_idx]);
+                }
+            }
+            return true;
+        } else {
+            return false;
         }
     }
 }
@@ -318,9 +379,16 @@ class Game {
 function onload() {
     const canvas = document.getElementById("game");
     if (canvas.getContext) {
-        window.g = new Game();
+        window.g = new Game(words);
         canvas.addEventListener("click", function(event) {
             window.g.onclick(event);
         }, false);
+        window.onpopstate = function(e) {
+            window.g.restart();
+        };
     }
+}
+
+function newgame() {
+    window.g.restart(false);
 }
