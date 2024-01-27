@@ -1,3 +1,32 @@
+class RNG {
+    constructor(seed) {
+        // LCG using GCC's constants
+        this.m = 0x80000000; // 2**31;
+        this.a = 1103515245;
+        this.c = 12345;
+
+        this.state = seed;
+    }
+    nextInt() {
+        this.state = (this.a * this.state + this.c) % this.m;
+        return this.state;
+    }
+    nextFloat() {
+        // returns in range [0,1]
+        return this.nextInt() / (this.m - 1);
+    }
+    nextRange(start, end) {
+        // returns in range [start, end): including start, excluding end
+        // can't modulu nextInt because of weak randomness in lower bits
+        var rangeSize = end - start;
+        var randomUnder1 = this.nextInt() / this.m;
+        return start + Math.floor(randomUnder1 * rangeSize);
+    }
+    choice(array) {
+        return array[this.nextRange(0, array.length)];
+    }
+}
+
 class Game {
     constructor(words) {
         this.words = words;
@@ -14,11 +43,12 @@ class Game {
             ["Ф", "Ы", "В", "А", "П", "Р", "О", "Л", "Д", "Ж", "Э"],
             ["Я", "Ч", "С", "М", "И", "Т", "Ь", "Б", "Ю"],
         ];
-        this.restart();
+        this.start();
     }
 
-    restart(usequery=true) {
+    cleargame() {
         $("#footer").text("");
+        this.numwordsremain = this.words.length;
         this.curline = "";
         this.lines = [];
         this.is_game_over = false;
@@ -29,15 +59,61 @@ class Game {
                 this.kb_state.set(ch, 0);
             }
         }
-        if (usequery && this.state_from_url()) {
-            console.log("Game loaded from query string");
-        } else {
-            console.log("New Game");
-            this.guessed_word = this.words[Math.floor(Math.random() * this.words.length)];
-            this.randid = Math.floor(Math.random() * 10000);
-            this.change_url(true);
+    }
+
+    newgame(start_word_idx = -1) {
+        console.log("New Game");
+        this.cleargame();
+        this.game_i = 1;
+        this.randid = Math.floor(Math.random() * 10000);
+        if (start_word_idx == -1) {
+            start_word_idx = Math.floor(Math.random() * this.words.length);
         }
+        this.start_word_idx = start_word_idx;
+        this.rng = new RNG(this.start_word_idx);
+        this.guessed_word = this.words[this.start_word_idx];
+        this.change_url(true);
+        this.refreshhtml();
         this.refresh();
+    }
+
+    nextgame() {
+        this.game_i++;
+        console.log("Next Game " + this.game_i);
+        this.cleargame();
+        this.guessed_word = this.rng.choice(this.words);
+        this.change_url(true);
+        this.refreshhtml();
+        this.refresh();
+    }
+
+    manualgame() {
+        if (this.lines.length == 0 && this.curline.length == 5) {
+            var word_idx = this.words.findIndex((x) => x == this.curline);
+            if (word_idx >= 0) {
+                console.log("Manual Game");
+                this.newgame(word_idx);
+                return;
+            }
+        }
+        alert("Введите одно правильное слово!");
+    }
+
+    start() {
+        // Попробовать загрузить игру из URL, иначе newgame()
+        this.cleargame();
+        if (this.loadgame()) {
+            console.log("Game loaded from query string");
+            this.refreshhtml();
+            this.refresh();
+        } else {
+            this.newgame();
+        }
+    }
+
+    refreshhtml() {
+        $("#gamei").text("N = " + this.game_i);
+        $("#footer2").text("Осталось слов: " + this.numwordsremain);
     }
 
     rounded_rect(x, y, w, h, r, fillStyle=0) {
@@ -280,14 +356,13 @@ class Game {
         }
     }
 
-    add_line(word) {
+    calc_result(word, guessed_word) {
         let result = [0, 0, 0, 0, 0];
         let used = [0, 0, 0, 0, 0];
         for (let i = 0; i < 5; i++) {
-            if (word[i] == this.guessed_word[i]) {
+            if (word[i] == guessed_word[i]) {
                 result[i] = 2;
                 used[i] = 1;
-                this.kb_state.set(word[i], 3);
             }
         }
         for (let i = 0; i < 5; i++) {
@@ -298,12 +373,17 @@ class Game {
                 if (used[j] != 0) {
                     continue;
                 }
-                if (word[i] == this.guessed_word[j]) {
+                if (word[i] == guessed_word[j]) {
                     result[i] = 1;
                     used[j] = 1;
                 }
             }
         }
+        return result;
+    }
+
+    add_line(word) {
+        let result = this.calc_result(word, this.guessed_word);
         for (let i = 0; i < 5; i++) {
             if (result[i] == 2) {
                 this.kb_state.set(word[i], 3);
@@ -315,8 +395,25 @@ class Game {
         }
         this.lines.push({word: word, result: result});
         this.curline = "";
+        // Посчитать оставшиеся слова
+        var numremain = 0;
+        for (let word of this.words) {
+            let ok = true;
+            for (let line of this.lines) {
+                if (line.result.toString() !== this.calc_result(line.word, word).toString()) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (ok) {
+                numremain++;
+            }
+        }
+        this.numwordsremain = numremain;
+
         if (word == this.guessed_word) {
             $("#footer").text("Вы угадали слово!");
+            this.is_game_over = true;
         } else if (this.lines.length == 6) {
             this.is_game_over = true;
             $("#footer").text("Вы не угадали слово " + this.guessed_word);
@@ -335,13 +432,14 @@ class Game {
     change_url(save_to_history=false) {
         var qu = $.query.parseNew(window.location.search);
         var g = [
-            this.words.findIndex((x) => x == this.guessed_word),
+            this.start_word_idx,
             this.randid];
         var p = [];
         for (const y of this.lines) {
             p.push(this.words.findIndex((x) => x == y.word))
         }
         var newUrl = qu.set("g", btoa(JSON.stringify(g)));
+        newUrl.SET("i", this.game_i);
         if (p.length != 0) {
             newUrl.SET("p", btoa(JSON.stringify(p)));
         } else {
@@ -354,13 +452,32 @@ class Game {
         }
     }
 
-    state_from_url() {
+    loadgame() {
         // Загрузить состояние игры из параметров URL
         var qu = $.query.parseNew(window.location.search);
         var ga = qu.get("g");
         if (ga) {
             var g = JSON.parse(atob(ga));
-            this.guessed_word = this.words[g[0]];
+            var ia = qu.get("i");
+
+            this.start_word_idx = g[0];
+            this.randid = g[1];
+
+            this.game_i = 1;
+            if (ia) {
+                var i = parseInt(ia);
+                if (!isNaN(i) && i > 1) {
+                    this.game_i = i;
+                }
+            }
+            this.rng = new RNG(this.start_word_idx);
+            if (this.game_i == 1) {
+                this.guessed_word = this.words[this.start_word_idx];
+            } else {
+                for (let i = this.game_i; i > 1; i--) {
+                    this.guessed_word = this.rng.choice(this.words);
+                }
+            }
 
             var pa = qu.get("p");
             if (pa) {
@@ -384,11 +501,28 @@ function onload() {
             window.g.onclick(event);
         }, false);
         window.onpopstate = function(e) {
-            window.g.restart();
+            window.g.start();
         };
     }
+    $("#showrem").prop("checked", false);
 }
 
 function newgame() {
-    window.g.restart(false);
+    window.g.newgame();
+}
+
+function nextgame() {
+    window.g.nextgame();
+}
+
+function showrem_onchange() {
+    if ($("#showrem").prop("checked")) {
+        $("#footer2").show();
+    } else {
+        $("#footer2").hide();
+    }
+}
+
+function manualgame() {
+    window.g.manualgame();
 }

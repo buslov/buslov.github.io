@@ -12,9 +12,11 @@ body, html {
     margin: 0;
     /*overflow-y: hidden;*/
     overflow-x: hidden;
+    color: #fff;
+    text-align: center;
 }
 
-h1 {
+h3 {
     text-align: center;
 }
 </style>
@@ -28,14 +30,19 @@ h1 {
 <script src="word5.js"></script>
 </head>
 <body>
-    <h3 align="center" style="color:#fff;">Игра 5 БУКВ</h3>
+    <h3>Игра 5 БУКВ</h3>
     <div align="center">
         <div>
             <input type="button" value="Новая игра" onclick="newgame();">
+            <div id="gamei" style="display: inline;">N = ?</div>
+            <input type="button" value="Следующее" onclick="nextgame();">
+            <input type="checkbox" id="showrem" onchange="showrem_onchange();"><label for="showrem">ост.слова</label>
+            <input type="button" value="Загадать" onclick="manualgame();">
         </div>
         <canvas id="game" width="400" height="620"></canvas>
     </div>
-    <div id="footer" style="color:#fff;text-align:center;"></div>
+    <div id="footer"></div>
+    <div id="footer2" style="display:none;"></div>
     <script>
         window.addEventListener("load", onload);
     </script>
