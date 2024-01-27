@@ -424,6 +424,7 @@ class Game {
         if (this.words.includes(this.curline)) {
             this.add_line(this.curline);
             this.change_url();
+            this.refreshhtml();
         } else {
             this.is_incorrect_word = true;
         }
@@ -503,8 +504,8 @@ function onload() {
         window.onpopstate = function(e) {
             window.g.start();
         };
+        showrem_onchange();
     }
-    $("#showrem").prop("checked", false);
 }
 
 function newgame() {
