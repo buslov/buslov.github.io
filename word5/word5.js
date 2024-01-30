@@ -429,14 +429,14 @@ class Game {
     check() {
         if (this.words.includes(this.curline)) {
             this.add_line(this.curline);
-            this.change_url();
-            this.refreshhtml();
             if (this.is_game_won) {
                 var numwins = parseInt(Cookies.get("word5numwins"));
                 if (!numwins) numwins = 0;
                 numwins++;
                 Cookies.set("word5numwins", numwins);
             }
+            this.change_url();
+            this.refreshhtml();
         } else {
             this.is_incorrect_word = true;
         }
