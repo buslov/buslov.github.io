@@ -48,6 +48,7 @@ class Game {
 
     cleargame() {
         $("#footer").text("");
+        this.is_game_won = false;
         this.numwordsremain = this.words.length;
         this.curline = "";
         this.lines = [];
@@ -418,10 +419,7 @@ class Game {
         if (word == this.guessed_word) {
             $("#footer").text("Вы угадали слово!");
             this.is_game_over = true;
-            var numwins = parseInt(Cookies.get("word5numwins"));
-            if (!numwins) numwins = 0;
-            numwins++;
-            Cookies.set("word5numwins", numwins);
+            this.is_game_won = true;
         } else if (this.lines.length == 6) {
             this.is_game_over = true;
             $("#footer").text("Вы не угадали слово " + this.guessed_word);
@@ -433,6 +431,12 @@ class Game {
             this.add_line(this.curline);
             this.change_url();
             this.refreshhtml();
+            if (this.is_game_won) {
+                var numwins = parseInt(Cookies.get("word5numwins"));
+                if (!numwins) numwins = 0;
+                numwins++;
+                Cookies.set("word5numwins", numwins);
+            }
         } else {
             this.is_incorrect_word = true;
         }
