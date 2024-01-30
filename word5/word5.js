@@ -114,6 +114,10 @@ class Game {
     refreshhtml() {
         $("#gamei").text("N = " + this.game_i);
         $("#footer2").text("Осталось слов: " + this.numwordsremain);
+        var numwins = Cookies.get("word5numwins");
+        if (!numwins) numwins = 0;
+        $("#footer3").text("Угадано слов: " + numwins);
+        Cookies.set('name', 'value')
     }
 
     rounded_rect(x, y, w, h, r, fillStyle=0) {
@@ -414,6 +418,10 @@ class Game {
         if (word == this.guessed_word) {
             $("#footer").text("Вы угадали слово!");
             this.is_game_over = true;
+            var numwins = parseInt(Cookies.get("word5numwins"));
+            if (!numwins) numwins = 0;
+            numwins++;
+            Cookies.set("word5numwins", numwins);
         } else if (this.lines.length == 6) {
             this.is_game_over = true;
             $("#footer").text("Вы не угадали слово " + this.guessed_word);
