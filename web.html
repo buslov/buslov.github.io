@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebPoliv</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <script>
+            var repeater_fwd;
+            var repeater_fwd_on = false;
+            var repeater_bwd;
+            var repeater_bwd_on = false;
+            var repeater_pump;
+            var repeater_pump_on = false;
+            var count = 0;
+
+            function motor_forward() {
+                function reqListener() {
+                    console.log(this.responseText);
+                }
+                const req = new XMLHttpRequest();
+                req.addEventListener("load", reqListener);
+                req.open("GET", "http://192.168.1.22/m1");
+                req.send();
+            }
+
+            function motor_backward() {
+                function reqListener() {
+                    console.log(this.responseText);
+                }
+                const req = new XMLHttpRequest();
+                req.addEventListener("load", reqListener);
+                req.open("GET", "http://192.168.1.22/m2");
+                req.send();
+            }
+
+            function motor_stop() {
+                function reqListener() {
+                    console.log(this.responseText);
+                }
+                const req = new XMLHttpRequest();
+                req.addEventListener("load", reqListener);
+                req.open("GET", "http://192.168.1.22/m0");
+                req.send();
+            }
+
+            function pump_start() {
+                function reqListener() {
+                    console.log(this.responseText);
+                }
+                const req = new XMLHttpRequest();
+                req.addEventListener("load", reqListener);
+                req.open("GET", "http://192.168.1.22/p1");
+                req.send();
+            }
+
+            function pump_stop() {
+                function reqListener() {
+                    console.log(this.responseText);
+                }
+                const req = new XMLHttpRequest();
+                req.addEventListener("load", reqListener);
+                req.open("GET", "http://192.168.1.22/p0");
+                req.send();
+            }
+
+            function pump_value(dir) {
+                function reqListener() {
+                    console.log(this.responseText);
+                }
+                const req = new XMLHttpRequest();
+                req.addEventListener("load", reqListener);
+                if (dir == 1) {
+                    req.open("GET", "http://192.168.1.22/pv1");
+                } else {
+                    req.open("GET", "http://192.168.1.22/pv2");
+                }
+                req.send();
+            }
+
+            function driver(state) {
+                function reqListener() {
+                    console.log(this.responseText);
+                }
+                const req = new XMLHttpRequest();
+                req.addEventListener("load", reqListener);
+                if (state) {
+                    req.open("GET", "http://192.168.1.22/d1");
+                } else {
+                    req.open("GET", "http://192.168.1.22/d0");
+                }
+                req.send();
+            }
+
+            function camera(state) {
+                function reqListener() {
+                    console.log(this.responseText);
+                }
+                const req = new XMLHttpRequest();
+                req.addEventListener("load", reqListener);
+                if (state) {
+                    req.open("GET", "http://192.168.1.22/cam1");
+                } else {
+                    req.open("GET", "http://192.168.1.22/cam0");
+                }
+                req.send();
+            }
+
+            function servo(dir) {
+                function reqListener() {
+                    console.log(this.responseText);
+                }
+                const req = new XMLHttpRequest();
+                req.addEventListener("load", reqListener);
+                if (dir == 1) {
+                    req.open("GET", "http://192.168.1.22/s1");
+                } else {
+                    req.open("GET", "http://192.168.1.22/s2");
+                }
+                req.send();
+            }
+
+            function forward_onmousedown() {
+                if (repeater_fwd_on) {
+                    clearInterval(repeater_fwd);
+                }
+                motor_forward();
+                repeater_fwd = setInterval(function() {
+                    motor_forward();
+                    wrapper.innerHTML = count;
+                    count++;
+                }, 500);
+                repeater_fwd_on = true;
+            }
+
+            function forward_onmouseup() {
+                if (repeater_fwd_on) {
+                    clearInterval(repeater_fwd);
+                    repeater_fwd_on = false;
+                    motor_stop();
+                }
+            }
+
+            function backward_onmousedown() {
+                if (repeater_bwd_on) {
+                    clearInterval(repeater_bwd);
+                }
+                motor_backward();
+                repeater_bwd = setInterval(function() {
+                    motor_backward();
+                    wrapper.innerHTML = count;
+                    count++;
+                }, 500);
+                repeater_bwd_on = true;
+            }
+
+            function backward_onmouseup() {
+                if (repeater_bwd_on) {
+                    clearInterval(repeater_bwd);
+                    repeater_bwd_on = false;
+                    motor_stop();
+                }
+            }
+
+            function pump_onmousedown() {
+                if (repeater_pump_on) {
+                    clearInterval(repeater_pump);
+                }
+                pump_start();
+                repeater_pump = setInterval(function() {
+                    pump_start();
+                    wrapper.innerHTML = count;
+                    count++;
+                }, 500);
+                repeater_pump_on = true;
+            }
+
+            function pump_onmouseup() {
+                if (repeater_pump_on) {
+                    clearInterval(repeater_pump);
+                    repeater_pump_on = false;
+                    pump_stop();
+                }
+            }
+        </script>
+    </head>
+    <body>
+    <p><a target="_blank" href="http://192.168.1.27/">Камера</a>
+    <p id="counter">--</p>
+    <input type="button" value="Вперед" onmousedown="forward_onmousedown();" onmouseup="forward_onmouseup();" onmouseleave="forward_onmouseup();">
+    (Удерживай)<br>
+    <br>
+    <input type="button" value="Назад" onmousedown="backward_onmousedown();" onmouseup="backward_onmouseup();" onmouseleave="backward_onmouseup();">
+    (Удерживай)<br>
+    <br>
+    <input type="button" value="Насос" onmousedown="pump_onmousedown();" onmouseup="pump_onmouseup();" onmouseleave="pump_onmouseup();">
+    (Удерживай)<br>
+    <br>
+    <input type="button" value="Вкл драйвер" onclick="driver(true);">
+    <br>
+    <br>
+    <input type="button" value="Выкл драйвер" onclick="driver(false);">
+    <br>
+    <br>
+    <input type="button" value="Насос медленнее" onclick="pump_value(2);">
+    &nbsp;&nbsp;
+    <input type="button" value="Насос быстрее" onclick="pump_value(1);">
+    <br>
+    <br>
+    <input type="button" value="Вкл камеру" onclick="camera(true);">
+    <br>
+    <br>
+    <input type="button" value="Выкл камеру" onclick="camera(false);">
+    <br>
+    <br>
+    <input type="button" value="Поднять камеру" onclick="servo(1);">
+    <br>
+    <br>
+    <input type="button" value="Опустить камеру" onclick="servo(2);">
+    <script>
+        var wrapper = document.getElementById("counter");
+    </script>
+    </body>
+</html>
